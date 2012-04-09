@@ -25,8 +25,12 @@
 
 
 require_once(dirname(__FILE__) . '/../../../config.php');
+require_once($CFG->libdir . '/questionlib.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once(dirname(__FILE__).'/questionlists.php');
+require_once(dirname(__FILE__).'/feedback_form.php');
+
+$questiontypeswithfeedback = array('ddmarker', 'ddimageortext', 'gapselect', 'match', 'multichoice');
 
 class tool_questionaddfeedback_question_converter_list extends tool_questionaddfeedback_question_list {
     protected function new_list_item($stringidentifier, $link, $record) {
@@ -56,9 +60,18 @@ echo $renderer->header();
 echo $renderer->heading(get_string('pluginname', 'tool_questionaddfeedback'), 2);
 
 
-$params = array();
+$qtypes = question_bank::get_creatable_qtypes();
+$applicableqtypes = array();//installed and with combined feedback etc.
+foreach ($qtypes as $qtypecode => $qtype) {
+    if (true === in_array($qtypecode, $questiontypeswithfeedback)) {
+         $applicableqtypes[$qtypecode] = $qtype;
+    }
+}
+
+list($qtypesql, $params) = $DB->get_in_or_equal(array_keys($applicableqtypes), SQL_PARAMS_NAMED, 'qt');
+
 $from = 'FROM {question_categories} cat, {question} q';
-$where = ' WHERE q.category =  cat.id ';
+$where = " WHERE q.category =  cat.id AND q.qtype $qtypesql ";
 
 if ($qcontextid) {
     $qcontext = get_context_instance_by_id($qcontextid, MUST_EXIST);
@@ -88,15 +101,24 @@ if (!count($questions)) {
         $contextids[] = $question->contextid;
     }
 
-    $questionsselected = (bool) ($categoryid || $qcontextid || $questionid);
-    if (!$confirm) {
+    $sql = 'SELECT q.qtype, COUNT(1) '.$from.$where.' GROUP BY q.qtype';
+
+    $qtypecounts = $DB->get_records_sql_menu($sql, $params);
+
+    $cofirmedurl = new moodle_url($PAGE->url, compact('categoryid', 'contextid', 'questionid') + array('confirm'=>1));
+    $mform = new tool_questionaddfeedback_form($cofirmedurl, $applicableqtypes, $qtypecounts, count($questions));
+    $mform->set_data();
+
+    $questionsselected = (bool) (!$mform->is_cancelled()) && ($categoryid || $qcontextid || $questionid);
+
+    if ($feedbackfromform = $mform->get_data()) {
+        $pagestate = 'processing';
+    } else {
         if (!$questionsselected) {
             $pagestate = 'listall';
         } else {
-            $pagestate = 'confirm';
+            $pagestate = 'form';
         }
-    } else if (confirm_sesskey()) {
-        $pagestate = 'processing';
     }
     $link = ($pagestate == 'listall');
     $contextlist = new tool_questionaddfeedback_context_list($pagestate, $link, array_unique($contextids));
@@ -119,14 +141,14 @@ if (!count($questions)) {
         case 'listall' :
             echo $renderer->render_tool_questionaddfeedback_list($top);
             break;
-        case 'confirm' :
+        case 'form' :
             echo $renderer->render_tool_questionaddfeedback_list($top);
-            $cofirmedurl = new moodle_url($PAGE->url, compact('categoryid', 'contextid', 'questionid') + array('confirm'=>1));
-            $cancelurl = new moodle_url($PAGE->url);
-            echo $renderer->confirm(get_string('confirmaddfeedback', 'tool_questionaddfeedback'), $cofirmedurl, $cancelurl);
+            $qtypes = question_bank::get_creatable_qtypes();
+            $renderer->box_start('generalbox');
+            $mform->display();
+            $renderer->box_end();
             break;
         case 'processing' :
-            //$questionlist->prepare_for_processing($top);
             echo '<ul>';
             $top->process($renderer);
             echo '</ul>';

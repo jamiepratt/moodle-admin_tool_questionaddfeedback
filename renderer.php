@@ -40,7 +40,7 @@ class tool_questionaddfeedback_renderer extends plugin_renderer_base {
         $a = new stdClass();
         $a->qcount = $item->get_q_count();
         $a->name = $item->item_name();
-        $thisitem = get_string('listitem'.$item->get_string_identifier().$item->get_list_type(), 'qtype_ddmarker', $a);
+        $thisitem = get_string('listitem'.$item->get_string_identifier().$item->get_list_type(), 'tool_questionaddfeedback', $a);
         if ($item->get_linked()) {
             $actionurl = new moodle_url($PAGE->url, array($item->id_param_name() => $item->get_id()));
             $thisitem = html_writer::tag('a', $thisitem, array('href' => $actionurl));

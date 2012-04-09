@@ -21,14 +21,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
-$string['confirmaddfeedback'] = 'You are about to add feedback.';
+$string['applytotheseqtypes'] = 'Add feedback to questions of the following types only';
+$string['confirmaddfeedback'] = 'Add feedback to above questions';
 
 $string['pluginname'] = 'Batch add feedback to questions';
+$string['qtypecheckboxlabel'] = '"{$a->name}" ({$a->qtypecount} out of {$a->totalcount} of above questions)';
 $string['noquestionsfound'] = 'No questions found here.';
-$string['listitemconfirmcategory'] = 'About to add feedback to questions in category "{$a->name}" (contains {$a->qcount} questions)';
-$string['listitemconfirmcontext'] = 'About to add feedback to questions in context "{$a->name}" (contains {$a->qcount} questions)';
-$string['listitemconfirmquestion'] = 'About to add feedback to question "{$a->name}"';
+$string['listitemformcategory'] = 'About to add feedback to questions in category "{$a->name}" (contains {$a->qcount} questions)';
+$string['listitemformcontext'] = 'About to add feedback to questions in context "{$a->name}" (contains {$a->qcount} questions)';
+$string['listitemformquestion'] = 'About to add feedback to question "{$a->name}"';
 $string['listitemlistallcategory'] = 'Select questions in category "{$a->name}" (contains {$a->qcount} questions)';
 $string['listitemlistallcontext'] = 'Select questions in context "{$a->name}" (contains {$a->qcount} questions)';
 $string['listitemlistallquestion'] = 'Select question "{$a->name}"';
