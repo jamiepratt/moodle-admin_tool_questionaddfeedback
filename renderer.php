@@ -28,7 +28,8 @@ defined('MOODLE_INTERNAL') || die();
 class tool_questionaddfeedback_renderer extends plugin_renderer_base {
 
     public function render_tool_questionaddfeedback_list(tool_questionaddfeedback_list_item $top, $pagestate, $link) {
-        $list = html_writer::tag('ul', html_writer::tag('li', $this->render_tool_questionaddfeedback_list_item($top, $pagestate, $link)));
+        $list = html_writer::tag('ul',
+                    html_writer::tag('li', $this->render_tool_questionaddfeedback_list_item($top, $pagestate, $link)));
         return $this->output->container($list, 'listofquestions');
     }
     public function render_tool_questionaddfeedback_list_item(tool_questionaddfeedback_list_item $listitem, $pagestate, $link) {

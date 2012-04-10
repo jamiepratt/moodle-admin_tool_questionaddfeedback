@@ -50,21 +50,25 @@ class tool_questionaddfeedback_processor_question_list extends tool_questionaddf
 class tool_questionaddfeedback_processor_question_list_item extends tool_questionaddfeedback_question_list_item {
     public function process($renderer, $pagestate, $link, $questiontypeswithfeedback, $questionidcolumnnames, $formdata) {
         global $DB;
-        $qtypetable = array_search($this->record->qtype, $questiontypeswithfeedback);
-        $qtype = question_bank::get_qtype($this->record->qtype);
-        $questionidclumnname = $questionidcolumnnames[$this->record->qtype];
-        $options = $DB->get_record($qtypetable, array($questionidclumnname => $this->record->id));
-        $fileoptions = array('subdirs' => 1, 'maxfiles' => -1, 'maxbytes' => 0);
-        //unfortunately cannot use $qtype->save_combined_feedback_helper as it is protected. So :
-        foreach (array('correctfeedback', 'partiallycorrectfeedback', 'incorrectfeedback') as $feedbackname) {
-            $field = $formdata->{$feedbackname};
-            $options->{$feedbackname.'format'} = $field['format'];
-            $draftitemid = file_get_submitted_draft_itemid($feedbackname);
-            $options->{$feedbackname} =
-                            file_save_draft_area_files($draftitemid, $this->record->contextid, 'question',
-                                                        $feedbackname, $this->record->id, $fileoptions, trim($field['text']));
+        if (isset($formdata->qtype) && isset($formdata->qtype[$this->record->qtype])) {
+            $qtypetable = array_search($this->record->qtype, $questiontypeswithfeedback);
+            $qtype = question_bank::get_qtype($this->record->qtype);
+            $questionidclumnname = $questionidcolumnnames[$this->record->qtype];
+            $options = $DB->get_record($qtypetable, array($questionidclumnname => $this->record->id));
+            $fileoptions = array('subdirs' => 1, 'maxfiles' => -1, 'maxbytes' => 0);
+            //unfortunately cannot use $qtype->save_combined_feedback_helper as it is protected. So :
+            foreach (array('correctfeedback', 'partiallycorrectfeedback', 'incorrectfeedback') as $feedbackname) {
+                $field = $formdata->{$feedbackname};
+                $options->{$feedbackname.'format'} = $field['format'];
+                $draftitemid = file_get_submitted_draft_itemid($feedbackname);
+                $options->{$feedbackname} =
+                                file_save_draft_area_files($draftitemid, $this->record->contextid, 'question',
+                                                            $feedbackname, $this->record->id, $fileoptions, trim($field['text']));
+            }
+            $DB->update_record($qtypetable, $options);
+        } else {
+            $pagestate = 'not'.$pagestate;
         }
-        $DB->update_record($qtypetable, $options);
         parent::process($renderer, $pagestate, $link);//outputs progress message (no children of question items)
     }
 }
@@ -171,7 +175,6 @@ if (!count($questions)) {
             break;
         case 'form' :
             echo $renderer->render_tool_questionaddfeedback_list($top, $pagestate, $link);
-            $qtypes = question_bank::get_creatable_qtypes();
             $renderer->box_start('generalbox');
             $mform->display();
             $renderer->box_end();

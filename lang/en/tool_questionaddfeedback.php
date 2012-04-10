@@ -36,3 +36,4 @@ $string['listitemlistallquestion'] = 'Select question "{$a->name}"';
 $string['listitemprocessingcategory'] = 'Added feedback to questions in category "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
 $string['listitemprocessingcontext'] = 'Added feedback to questions in context "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
 $string['listitemprocessingquestion'] = 'Added feedback to question "{$a->name}"';
+$string['listitemnotprocessingquestion'] = 'Did not add feedback to question "{$a->name}" as it was not of a type selected to have feedback added to';
