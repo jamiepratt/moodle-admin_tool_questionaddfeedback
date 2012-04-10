@@ -30,16 +30,42 @@ require_once($CFG->libdir . '/adminlib.php');
 require_once(dirname(__FILE__).'/questionlists.php');
 require_once(dirname(__FILE__).'/feedback_form.php');
 
-$questiontypeswithfeedback = array('ddmarker', 'ddimageortext', 'gapselect', 'match', 'multichoice');
+$questiontypeswithfeedback = array('qtype_ddmarker' => 'ddmarker',
+                                    'qtype_ddimageortext' => 'ddimageortext',
+                                    'question_gapselect' => 'gapselect',
+                                    'question_match' => 'match',
+                                    'question_multichoice' => 'multichoice');
 
-class tool_questionaddfeedback_question_converter_list extends tool_questionaddfeedback_question_list {
-    protected function new_list_item($stringidentifier, $link, $record) {
-        return new tool_questionaddfeedback_question_converter_list_item($stringidentifier, $link, $record, $this, $this->categorylist);
+$questionidcolumnnames = array('ddmarker' => 'questionid',
+                                    'ddimageortext' => 'questionid',
+                                    'gapselect' => 'questionid',
+                                    'match' => 'question',
+                                    'multichoice' => 'question');
+
+class tool_questionaddfeedback_processor_question_list extends tool_questionaddfeedback_question_list {
+    protected function new_list_item($record) {
+        return new tool_questionaddfeedback_processor_question_list_item($record, $this, $this->categorylist);
     }
 }
-class tool_questionaddfeedback_question_converter_list_item extends tool_questionaddfeedback_question_list_item {
-    public function process($renderer) {
-        parent::process($renderer);//outputs progress message
+class tool_questionaddfeedback_processor_question_list_item extends tool_questionaddfeedback_question_list_item {
+    public function process($renderer, $pagestate, $link, $questiontypeswithfeedback, $questionidcolumnnames, $formdata) {
+        global $DB;
+        $qtypetable = array_search($this->record->qtype, $questiontypeswithfeedback);
+        $qtype = question_bank::get_qtype($this->record->qtype);
+        $questionidclumnname = $questionidcolumnnames[$this->record->qtype];
+        $options = $DB->get_record($qtypetable, array($questionidclumnname => $this->record->id));
+        $fileoptions = array('subdirs' => 1, 'maxfiles' => -1, 'maxbytes' => 0);
+        //unfortunately cannot use $qtype->save_combined_feedback_helper as it is protected. So :
+        foreach (array('correctfeedback', 'partiallycorrectfeedback', 'incorrectfeedback') as $feedbackname) {
+            $field = $formdata->{$feedbackname};
+            $options->{$feedbackname.'format'} = $field['format'];
+            $draftitemid = file_get_submitted_draft_itemid($feedbackname);
+            $options->{$feedbackname} =
+                            file_save_draft_area_files($draftitemid, $this->record->contextid, 'question',
+                                                        $feedbackname, $this->record->id, $fileoptions, trim($field['text']));
+        }
+        $DB->update_record($qtypetable, $options);
+        parent::process($renderer, $pagestate, $link);//outputs progress message (no children of question items)
     }
 }
 
@@ -92,7 +118,6 @@ if ($qcontextid) {
 $sql = 'SELECT q.*, cat.contextid '.$from.$where.'ORDER BY cat.id, q.name';
 
 $questions = $DB->get_records_sql($sql, $params);
-
 if (!count($questions)) {
     echo html_writer::tag('div', get_string('noquestionsfound', 'tool_questionaddfeedback'));
 } else {
@@ -101,15 +126,33 @@ if (!count($questions)) {
         $contextids[] = $question->contextid;
     }
 
-    $sql = 'SELECT q.qtype, COUNT(1) '.$from.$where.' GROUP BY q.qtype';
 
-    $qtypecounts = $DB->get_records_sql_menu($sql, $params);
+    $contextlist = new tool_questionaddfeedback_context_list(array_unique($contextids));
+    $categorylist = new tool_questionaddfeedback_category_list($contextids, $contextlist);
+    $questionlist = new tool_questionaddfeedback_processor_question_list($questions, $categorylist);
 
+    foreach ($questions as $question) {
+        $questionlist->leaf_node($question->id);
+    }
+    if ($questionid) {
+        $top = $questionlist->get_instance($questionid);
+    } else if ($categoryid) {
+        $top = $categorylist->get_instance($categoryid);
+    } else if ($qcontextid) {
+        $top = $contextlist->get_instance($qcontextid);
+    } else {
+        $top = $contextlist->root_node();
+    }
+    $qtypecounts = $top->get_q_counts();
     $cofirmedurl = new moodle_url($PAGE->url, compact('categoryid', 'contextid', 'questionid') + array('confirm'=>1));
-    $mform = new tool_questionaddfeedback_form($cofirmedurl, $applicableqtypes, $qtypecounts, count($questions));
+    $mform = new tool_questionaddfeedback_form($cofirmedurl, $applicableqtypes, $qtypecounts);
     $mform->set_data();
 
     $questionsselected = (bool) (!$mform->is_cancelled()) && ($categoryid || $qcontextid || $questionid);
+
+    if ($mform->is_cancelled()) {
+        $top = $contextlist->root_node();
+    }
 
     if ($feedbackfromform = $mform->get_data()) {
         $pagestate = 'processing';
@@ -121,28 +164,13 @@ if (!count($questions)) {
         }
     }
     $link = ($pagestate == 'listall');
-    $contextlist = new tool_questionaddfeedback_context_list($pagestate, $link, array_unique($contextids));
-    $categorylist = new tool_questionaddfeedback_category_list($pagestate, $link, $contextids, $contextlist);
-    $questionlist = new tool_questionaddfeedback_question_converter_list($pagestate, $link, $questions, $categorylist);
 
-    foreach ($questions as $question) {
-        $questionlist->leaf_node($question->id, 1);
-    }
-    if ($questionid) {
-        $top = $questionlist->get_instance($questionid);
-    } else if ($categoryid) {
-        $top = $categorylist->get_instance($categoryid);
-    } else if ($qcontextid) {
-        $top = $contextlist->get_instance($qcontextid);
-    } else {
-        $top = $contextlist->root_node();
-    }
     switch ($pagestate) {
         case 'listall' :
-            echo $renderer->render_tool_questionaddfeedback_list($top);
+            echo $renderer->render_tool_questionaddfeedback_list($top, $pagestate, $link);
             break;
         case 'form' :
-            echo $renderer->render_tool_questionaddfeedback_list($top);
+            echo $renderer->render_tool_questionaddfeedback_list($top, $pagestate, $link);
             $qtypes = question_bank::get_creatable_qtypes();
             $renderer->box_start('generalbox');
             $mform->display();
@@ -150,7 +178,7 @@ if (!count($questions)) {
             break;
         case 'processing' :
             echo '<ul>';
-            $top->process($renderer);
+            $top->process($renderer, $pagestate, $link, $questiontypeswithfeedback, $questionidcolumnnames, $feedbackfromform);
             echo '</ul>';
             break;
         default :

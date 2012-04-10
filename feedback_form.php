@@ -31,16 +31,14 @@ class tool_questionaddfeedback_form extends question_edit_form {
 
     protected $qtypes;
     protected $qtypecounts;
-    protected $totalcount;
 
-    public function __construct(moodle_url $url, array $qtypes, array $qtypecounts, $totalcount) {
+    public function __construct(moodle_url $url, array $qtypes, array $qtypecounts) {
         //skip the question_edit_form constructor as it does stuff we don't require
         $this->editoroptions = array('subdirs' => 1, 'maxfiles' => EDITOR_UNLIMITED_FILES,
                                     'context' => context_system::instance());
         $this->fileoptions = array('subdirs' => 1, 'maxfiles' => -1, 'maxbytes' => -1);
         $this->qtypes = $qtypes;
         $this->qtypecounts = $qtypecounts;
-        $this->totalcount = $totalcount;
         $this->context = context_system::instance();
         moodleform::__construct($url);
     }
@@ -74,7 +72,7 @@ class tool_questionaddfeedback_form extends question_edit_form {
                 $a = new stdClass();
                 $a->name = question_bank::get_qtype_name($qtypecode);
                 $a->qtypecount = $this->qtypecounts[$qtypecode];
-                $a->totalcount = $this->totalcount;
+                $a->totalcount = array_sum($this->qtypecounts);
                 $label = get_string('qtypecheckboxlabel', 'tool_questionaddfeedback', $a);
                 $mform->addElement('checkbox', "qtype[{$qtypecode}]", '', $label, array('group' => 1));
                 $mform->setDefault("qtype[{$qtypecode}]", 1);

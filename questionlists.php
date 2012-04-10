@@ -36,22 +36,18 @@ abstract class tool_questionaddfeedback_list_item implements renderable {
     /**
      * @var count of questions contained in this item and sub items.
      */
-    protected $qcount = 0;
+    protected $qcounts = array();
     /**
      * @var children array of pointers to list_items either category_list_items or context_list_items
      */
     protected $children = array();
 
-    protected $stringidentifier;
-    protected $link;
     protected $record;
     protected $list;
     protected $parentlist;
     protected $listtype = null;
 
-    public function __construct($stringidentifier, $link, $record, $list, $parentlist = null) {
-        $this->stringidentifier = $stringidentifier;
-        $this->link = $link;
+    public function __construct($record, $list, $parentlist = null) {
         $this->record = $record;
         $this->list = $list;
         $this->parentlist = $parentlist;
@@ -77,42 +73,45 @@ abstract class tool_questionaddfeedback_list_item implements renderable {
     public function get_id() {
         return $this->record->id;
     }
-    public function get_q_count() {
-        return $this->qcount;
+    public function get_q_counts() {
+        return $this->qcounts;
     }
-    public function get_string_identifier() {
-        return $this->stringidentifier;
-    }
-    public function get_linked() {
-        return $this->link;
-    }
+
     public function get_list_type() {
         return $this->listtype;
     }
     public function get_children() {
         return $this->children;
     }
-    public function leaf_to_root($qcount) {
-        $this->qcount += $qcount;
+    public function leaf_to_root(array $qcounts) {
+        foreach ($qcounts as $qtypecode => $qcount) {
+            if (!isset($this->qcounts[$qtypecode])) {
+                $this->qcounts[$qtypecode] = 0;
+            }
+            $this->qcounts[$qtypecode] += $qcount;
+        }
         $parent = $this->parent_node();
         if ($parent !== null) {
             $parent->add_child($this);
-            $parent->leaf_to_root($qcount);
+            $parent->leaf_to_root($qcounts);
         }
     }
 
-    public function process($renderer) {
+    /**
+     * Can take a variable ammount of params and pass them through to any children of item
+     */
+    public function process($renderer, $pagestate, $link) {
         echo '<li>';
-        echo $renderer->item($this);
-        $this->process_children($renderer);
+        echo $renderer->item($this, $pagestate, $link);
+        call_user_func_array(array($this, 'process_children'), func_get_args());
         echo '</li>';
         flush();
     }
 
-    protected function process_children($renderer) {
+    protected function process_children() {
         echo '<ul>';
         foreach ($this->children as $child) {
-            $child->process($renderer);
+            call_user_func_array(array($child, 'process'), func_get_args());
         }
         echo '</ul>';
     }
@@ -163,6 +162,10 @@ class tool_questionaddfeedback_question_list_item extends tool_questionaddfeedba
     public function question_ids() {
         return array($this->record->id);
     }
+
+    public function leaf_to_root(array $qcounts) {
+        parent::leaf_to_root(array($this->record->qtype => '1'));
+    }
 }
 class tool_questionaddfeedback_context_list_item extends tool_questionaddfeedback_list_item {
     protected $listtype = 'context';
@@ -193,11 +196,11 @@ class tool_questionaddfeedback_context_list_item extends tool_questionaddfeedbac
 abstract class tool_questionaddfeedback_list {
     protected $records = array();
     protected $instances = array();
-    abstract protected function new_list_item($stringidentifier, $link, $record);
-    protected function make_list_item_instances_from_records($stringidentifier, $link) {
+    abstract protected function new_list_item($record);
+    protected function make_list_item_instances_from_records() {
         if (!empty($this->records)) {
             foreach ($this->records as $id => $record) {
-                $this->instances[$id] = $this->new_list_item($stringidentifier, $link, $record);
+                $this->instances[$id] = $this->new_list_item($record);
             }
         }
     }
@@ -205,20 +208,20 @@ abstract class tool_questionaddfeedback_list {
         return $this->instances[$id];
     }
 
-    public function leaf_node ($id, $qcount) {
+    public function leaf_node ($id) {
         $instance = $this->get_instance($id);
-        $instance->leaf_to_root($qcount);
+        $instance->leaf_to_root(array());
     }
 
 }
 
 class tool_questionaddfeedback_context_list extends tool_questionaddfeedback_list {
 
-    protected function new_list_item($stringidentifier, $link, $record) {
-        return new tool_questionaddfeedback_context_list_item($stringidentifier, $link, $record, $this);
+    protected function new_list_item($record) {
+        return new tool_questionaddfeedback_context_list_item($record, $this);
     }
 
-    public function __construct($stringidentifier, $link, $contextids) {
+    public function __construct($contextids) {
         global $DB;
         $this->records = array();
         foreach ($contextids as $contextid) {
@@ -233,7 +236,7 @@ class tool_questionaddfeedback_context_list extends tool_questionaddfeedback_lis
                 }
             }
         }
-        $this->make_list_item_instances_from_records($stringidentifier, $link);
+        $this->make_list_item_instances_from_records();
     }
     public function render($roottorender = null) {
         if ($roottorender === null) {
@@ -251,29 +254,29 @@ class tool_questionaddfeedback_context_list extends tool_questionaddfeedback_lis
 
 class tool_questionaddfeedback_category_list extends tool_questionaddfeedback_list {
     protected $contextlist;
-    protected function new_list_item($stringidentifier, $link, $record) {
-        return new tool_questionaddfeedback_category_list_item($stringidentifier, $link, $record, $this, $this->contextlist);
+    protected function new_list_item($record) {
+        return new tool_questionaddfeedback_category_list_item($record, $this, $this->contextlist);
     }
-    public function __construct($stringidentifier, $link, $contextids, $contextlist) {
+    public function __construct($contextids, $contextlist) {
         global $DB;
         $this->contextlist = $contextlist;
         //probably most efficient way to reconstruct question category tree is to load all q cats in relevant contexts
         list($sql, $params) = $DB->get_in_or_equal($contextids);
         $this->records = $DB->get_records_select('question_categories', "contextid ".$sql, $params);
-        $this->make_list_item_instances_from_records($stringidentifier, $link);
+        $this->make_list_item_instances_from_records();
     }
 }
 
 class tool_questionaddfeedback_question_list extends tool_questionaddfeedback_list {
     protected $categorylist;
-    protected function new_list_item($stringidentifier, $link, $record) {
-        return new tool_questionaddfeedback_question_list_item($stringidentifier, $link, $record, $this, $this->categorylist);
+    protected function new_list_item($record) {
+        return new tool_questionaddfeedback_question_list_item($record, $this, $this->categorylist);
     }
-    public function __construct($stringidentifier, $link, $questions, $categorylist) {
+    public function __construct($questions, $categorylist) {
         global $DB;
         $this->categorylist = $categorylist;
         $this->records = $questions;
-        $this->make_list_item_instances_from_records($stringidentifier, $link);
+        $this->make_list_item_instances_from_records();
     }
     public function prepare_for_processing($top) {
     }

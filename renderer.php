@@ -27,31 +27,39 @@ defined('MOODLE_INTERNAL') || die();
 
 class tool_questionaddfeedback_renderer extends plugin_renderer_base {
 
-    public function render_tool_questionaddfeedback_list(tool_questionaddfeedback_list_item $top) {
-        $list = html_writer::tag('ul', html_writer::tag('li', $this->render_tool_questionaddfeedback_list_item($top)));
+    public function render_tool_questionaddfeedback_list(tool_questionaddfeedback_list_item $top, $pagestate, $link) {
+        $list = html_writer::tag('ul', html_writer::tag('li', $this->render_tool_questionaddfeedback_list_item($top, $pagestate, $link)));
         return $this->output->container($list, 'listofquestions');
     }
-    public function render_tool_questionaddfeedback_list_item(tool_questionaddfeedback_list_item $listitem) {
-        return $this->item($listitem).$this->children($listitem);
+    public function render_tool_questionaddfeedback_list_item(tool_questionaddfeedback_list_item $listitem, $pagestate, $link) {
+        return $this->item($listitem, $pagestate, $link).$this->children($listitem, $pagestate, $link);
     }
 
-    public function item(tool_questionaddfeedback_list_item $item) {
+    public function item(tool_questionaddfeedback_list_item $item, $pagestate, $link) {
         global $PAGE;
         $a = new stdClass();
-        $a->qcount = $item->get_q_count();
+        $a->qtypecounts = '';
+        $a->total = 0;
+        foreach ($item->get_q_counts() as $qtypecode => $qtypecount) {
+            if ($a->qtypecounts !== '') {
+                $a->qtypecounts .= ' + ';
+            }
+            $a->qtypecounts .= $qtypecount ." ". question_bank::get_qtype_name($qtypecode);
+            $a->total += $qtypecount;
+        }
         $a->name = $item->item_name();
-        $thisitem = get_string('listitem'.$item->get_string_identifier().$item->get_list_type(), 'tool_questionaddfeedback', $a);
-        if ($item->get_linked()) {
+        $thisitem = get_string('listitem'.$pagestate.$item->get_list_type(), 'tool_questionaddfeedback', $a);
+        if ($link) {
             $actionurl = new moodle_url($PAGE->url, array($item->id_param_name() => $item->get_id()));
             $thisitem = html_writer::tag('a', $thisitem, array('href' => $actionurl));
         }
         return $thisitem;
     }
 
-    protected function children(tool_questionaddfeedback_list_item $item) {
+    protected function children(tool_questionaddfeedback_list_item $item, $pagestate, $link) {
         $children = array();
         foreach ($item->get_children() as $child) {
-            $children[] = $this->render_tool_questionaddfeedback_list_item($child);
+            $children[] = $this->render_tool_questionaddfeedback_list_item($child, $pagestate, $link);
         }
         return html_writer::alist($children);
     }

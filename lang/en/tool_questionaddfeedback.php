@@ -25,14 +25,14 @@ $string['applytotheseqtypes'] = 'Add feedback to questions of the following type
 $string['confirmaddfeedback'] = 'Add feedback to above questions';
 
 $string['pluginname'] = 'Batch add feedback to questions';
-$string['qtypecheckboxlabel'] = '"{$a->name}" ({$a->qtypecount} out of {$a->totalcount} of above questions)';
+$string['qtypecheckboxlabel'] = '"{$a->name}" ({$a->qtypecount} out of {$a->totalcount} selected questions)';
 $string['noquestionsfound'] = 'No questions found here.';
-$string['listitemformcategory'] = 'About to add feedback to questions in category "{$a->name}" (contains {$a->qcount} questions)';
-$string['listitemformcontext'] = 'About to add feedback to questions in context "{$a->name}" (contains {$a->qcount} questions)';
+$string['listitemformcategory'] = 'About to add feedback to questions in category "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
+$string['listitemformcontext'] = 'About to add feedback to questions in context "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
 $string['listitemformquestion'] = 'About to add feedback to question "{$a->name}"';
-$string['listitemlistallcategory'] = 'Select questions in category "{$a->name}" (contains {$a->qcount} questions)';
-$string['listitemlistallcontext'] = 'Select questions in context "{$a->name}" (contains {$a->qcount} questions)';
+$string['listitemlistallcategory'] = 'Select questions in category "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
+$string['listitemlistallcontext'] = 'Select questions in context "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
 $string['listitemlistallquestion'] = 'Select question "{$a->name}"';
-$string['listitemprocessingcategory'] = 'Converting questions in category "{$a->name}" (contains {$a->qcount} questions)';
-$string['listitemprocessingcontext'] = 'Converting questions in context "{$a->name}" (contains {$a->qcount} questions)';
+$string['listitemprocessingcategory'] = 'Converting questions in category "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
+$string['listitemprocessingcontext'] = 'Converting questions in context "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
 $string['listitemprocessingquestion'] = 'Converted question "{$a->name}"';
