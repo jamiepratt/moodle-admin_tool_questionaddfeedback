@@ -48,11 +48,13 @@ class tool_questionaddfeedback_form extends question_edit_form {
         $fakequestion->options = new object();
         $feedbackfields = array('correctfeedback', 'partiallycorrectfeedback', 'incorrectfeedback');
         foreach ($feedbackfields as $feedbackname) {
-            $fakequestion->options->$feedbackname = '';
+            $fakequestion->options->$feedbackname =
+                                            html_writer::tag('p', get_string('default'.$feedbackname, 'tool_questionaddfeedback'));
             $feedbackformat = $feedbackname . 'format';
             $fakequestion->options->$feedbackformat = FORMAT_HTML;
         }
         $fakequestion = $this->data_preprocessing($fakequestion);
+
         moodleform::set_data($fakequestion);
     }
 

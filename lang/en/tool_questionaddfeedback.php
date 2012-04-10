@@ -24,9 +24,10 @@
 $string['applytotheseqtypes'] = 'Add feedback to questions of the following types only';
 $string['confirmaddfeedback'] = 'Add feedback to above questions';
 
-$string['pluginname'] = 'Batch add feedback to questions';
-$string['qtypecheckboxlabel'] = '"{$a->name}" ({$a->qtypecount} out of {$a->totalcount} selected questions)';
-$string['noquestionsfound'] = 'No questions found here.';
+$string['defaultcorrectfeedback'] = 'Your answer is correct';
+$string['defaultpartiallycorrectfeedback'] = 'Your answer is partially correct';
+$string['defaultincorrectfeedback'] = 'Your answer is incorrect';
+
 $string['listitemformcategory'] = 'About to add feedback to questions in category "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
 $string['listitemformcontext'] = 'About to add feedback to questions in context "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
 $string['listitemformquestion'] = 'About to add feedback to question "{$a->name}"';
@@ -37,3 +38,7 @@ $string['listitemprocessingcategory'] = 'Added feedback to questions in category
 $string['listitemprocessingcontext'] = 'Added feedback to questions in context "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
 $string['listitemprocessingquestion'] = 'Added feedback to question "{$a->name}"';
 $string['listitemnotprocessingquestion'] = 'Did not add feedback to question "{$a->name}" as it was not of a type selected to have feedback added to';
+
+$string['noquestionsfound'] = 'No questions found here.';
+$string['pluginname'] = 'Batch add feedback to questions';
+$string['qtypecheckboxlabel'] = '"{$a->name}" ({$a->qtypecount} out of {$a->totalcount} selected questions)';
