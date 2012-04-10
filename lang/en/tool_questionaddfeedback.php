@@ -33,6 +33,6 @@ $string['listitemformquestion'] = 'About to add feedback to question "{$a->name}
 $string['listitemlistallcategory'] = 'Select questions in category "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
 $string['listitemlistallcontext'] = 'Select questions in context "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
 $string['listitemlistallquestion'] = 'Select question "{$a->name}"';
-$string['listitemprocessingcategory'] = 'Converting questions in category "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
-$string['listitemprocessingcontext'] = 'Converting questions in context "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
-$string['listitemprocessingquestion'] = 'Converted question "{$a->name}"';
+$string['listitemprocessingcategory'] = 'Added feedback to questions in category "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
+$string['listitemprocessingcontext'] = 'Added feedback to questions in context "{$a->name}" ({$a->qtypecounts} = Total {$a->total} questions)';
+$string['listitemprocessingquestion'] = 'Added feedback to question "{$a->name}"';
