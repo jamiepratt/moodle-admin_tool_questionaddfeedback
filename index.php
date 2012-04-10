@@ -61,9 +61,20 @@ class tool_questionaddfeedback_processor_question_list_item extends tool_questio
                 $field = $formdata->{$feedbackname};
                 $options->{$feedbackname.'format'} = $field['format'];
                 $draftitemid = file_get_submitted_draft_itemid($feedbackname);
+                $newfeedback = trim($field['text']);
+                switch ($formdata->selectwheretoadd) {
+                    case 'replace' :
+                        break;
+                    case 'prepend' :
+                        $newfeedback = $newfeedback.$options->{$feedbackname};
+                        break;
+                    case 'append' :
+                        $newfeedback = $options->{$feedbackname}.$newfeedback;
+                        break;
+                }
                 $options->{$feedbackname} =
                                 file_save_draft_area_files($draftitemid, $this->record->contextid, 'question',
-                                                            $feedbackname, $this->record->id, $fileoptions, trim($field['text']));
+                                                            $feedbackname, $this->record->id, $fileoptions, $newfeedback);
             }
             $DB->update_record($qtypetable, $options);
         } else {

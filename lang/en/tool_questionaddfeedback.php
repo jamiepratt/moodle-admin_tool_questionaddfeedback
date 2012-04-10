@@ -42,3 +42,8 @@ $string['listitemnotprocessingquestion'] = 'Did not add feedback to question "{$
 $string['noquestionsfound'] = 'No questions found here.';
 $string['pluginname'] = 'Batch add feedback to questions';
 $string['qtypecheckboxlabel'] = '"{$a->name}" ({$a->qtypecount} out of {$a->totalcount} selected questions)';
+
+$string['selectwheretoadd'] = 'Where to add feedback';
+$string['selectwheretoaddprepend'] = 'Prepend new feedback before any existing feedback';
+$string['selectwheretoaddappend'] = 'Append new feedback after any existing feedback';
+$string['selectwheretoaddreplace'] = 'Replace any existing feedback';

@@ -80,7 +80,12 @@ class tool_questionaddfeedback_form extends question_edit_form {
                 $mform->setDefault("qtype[{$qtypecode}]", 1);
             }
         }
-
+        $options = array();
+        foreach (array('append', 'prepend', 'replace') as $pos) {
+            $options[$pos] = get_string('selectwheretoadd'.$pos, 'tool_questionaddfeedback');
+        }
+        $mform->addElement('select', 'selectwheretoadd', get_string('selectwheretoadd', 'tool_questionaddfeedback'), $options);
+        $mform->closeHeaderBefore('selectwheretoadd');
         $this->add_combined_feedback_fields();
 
         $this->add_action_buttons(true, get_string('confirmaddfeedback', 'tool_questionaddfeedback'));
