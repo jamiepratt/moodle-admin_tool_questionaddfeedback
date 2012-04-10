@@ -74,11 +74,10 @@ class tool_questionaddfeedback_form extends question_edit_form {
                 $a->qtypecount = $this->qtypecounts[$qtypecode];
                 $a->totalcount = array_sum($this->qtypecounts);
                 $label = get_string('qtypecheckboxlabel', 'tool_questionaddfeedback', $a);
-                $mform->addElement('checkbox', "qtype[{$qtypecode}]", '', $label, array('group' => 1));
+                $mform->addElement('checkbox', "qtype[{$qtypecode}]", '', $label);
                 $mform->setDefault("qtype[{$qtypecode}]", 1);
             }
         }
-        $this->add_checkbox_controller(1);
 
         $this->add_combined_feedback_fields();
 
